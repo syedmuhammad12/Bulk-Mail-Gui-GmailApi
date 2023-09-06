@@ -2,8 +2,15 @@ from tkinter import *
 from tkinter.messagebox import showinfo,showerror,askyesno,askokcancel,showwarning
 from tkinter import ttk
 from datetime import datetime
-
-
+from tkinter.filedialog import askopenfilename
+import google.auth
+# from googleapiclient.discovery import build
+# from googleapiclient.errors import HttpError
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+# from googleapiclient.discovery import build
+# from googleapiclient.errors import HttpError
 
 class Main(Tk):
     
@@ -117,8 +124,8 @@ class SoftwareScreen(Tk):
         
         # window_width = 750
         # window_height = 500
-        window_width = 800
-        window_height = 550
+        window_width = 1000
+        window_height = 650
         
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
@@ -134,12 +141,74 @@ class SoftwareScreen(Tk):
         # super().title("Retail Management System")
         self.config(bg="white")
         
+        # ================================= Variables ========================================================
+        
+        self.recipients_file_name = StringVar()
+        self.html_file_name = StringVar()
+        self.token_json_file_name = StringVar()
+        
         # =============================== Back Ground ==========================
         #Credits
         # self.credit = Label(self,text="IMS - Inventory Management Syestem | Developed By: Syed Muhammad",fg="white",bg="grey").place(x=0,y=685,relwidth=1)
             
         #=======================================================================
-        self.l1 = Label(self,text="Bulk Mailer",font=("Times New Roman","30","bold",),bg="light blue", fg="yellow").place(x=0,y=0,relwidth=1)    
+        self.l1 = Label(self,text="Bulk Mailer",font=("Times New Roman","30","bold",),bg="light blue", fg="yellow").place(x=0,y=0,relwidth=1)  
+        
+        # ===========================================================================================
+        self.mails_info = LabelFrame(self, text="Recipients Info",font=("Times New Roman","20"), width="450", height="300", borderwidth="2", bg="white", labelanchor='n')
+        
+            # -----------------------------------------------------------
+        
+        self.recipients_upload_frame = Frame(self.mails_info, bg="white")
+        
+        self.recipients_upload_label = Label(self.recipients_upload_frame, text="Upload Recipients File", font=("Times New Roman", "15"), bg="white")
+        self.recipients_upload_label.grid(row=0, column=0, columnspan=1)
+        
+        self.recipients_upload_entry = Entry(self.recipients_upload_frame, textvariable=self.recipients_file_name, font=("Times New Roman", "15"), width="30", bg="white")
+        self.recipients_upload_entry.grid(row=1, column=0, columnspan=1, padx=15, pady=10)
+        
+        self.recipients_upload_button = Button(self.recipients_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg="light blue")
+        self.recipients_upload_button.grid(row=1, column=1)
+        
+        self.recipients_upload_frame.place(x=5, y=5) 
+        
+            # ---------------------------------------------------------------
+            
+        self.html_upload_frame = Frame(self.mails_info, bg="white")
+        
+        
+        
+        self.html_upload_label = Label(self.html_upload_frame, text="Upload HTML File", font=("Times New Roman", "15"), bg="white")
+        self.html_upload_label.grid(row=0, column=0, columnspan=1)
+        
+        self.html_upload_entry = Entry(self.html_upload_frame, textvariable=self.html_file_name, font=("Times New Roman", "15"), width="30", bg="white")
+        self.html_upload_entry.grid(row=1, column=0, columnspan=1, padx=15, pady=10)
+        
+        self.html_upload_button = Button(self.html_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg="white")
+        self.html_upload_button.grid(row=1, column=1)
+        
+        self.html_upload_frame.place(x=5, y=80)    
+        
+            # ---------------------------------------------------------------
+            
+        self.token_json_upload_frame = Frame(self.mails_info, bg="white")
+        
+        self.token_json_upload_label = Label(self.token_json_upload_frame, text="Upload Token(JSON) File", font=("Times New Roman", "15"), bg="white")
+        self.token_json_upload_label.grid(row=0, column=0, columnspan=1)
+        
+        self.token_json_upload_entry = Entry(self.token_json_upload_frame, textvariable=self.token_json_file_name, font=("Times New Roman", "15"), width="30", bg="white")
+        self.token_json_upload_entry.grid(row=1, column=0, columnspan=1, padx=15, pady=10)
+        
+        self.token_json_upload_button = Button(self.token_json_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg="white")
+        self.token_json_upload_button.grid(row=1, column=1)
+        
+        self.token_json_upload_frame.place(x=5, y=160)    
+            
+            
+            
+        self.mails_info.place(x=20, y=80)  
+        
+        # =============================================================================================
             
             
         self.mainloop()
@@ -147,3 +216,9 @@ class SoftwareScreen(Tk):
         
 if __name__ == "__main__":
     SoftwareScreen()
+    # SCOPES = ['https://www.googleapis.com/auth/gmail.send']
+    # creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    # service = build('gmail', 'v1', credentials=creds)
+    # print(type(service))
+    # print(service)
+    # print(dir(service.users().getProfile()))
