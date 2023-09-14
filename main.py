@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter.messagebox import showinfo,showerror,askyesno,askokcancel,showwarning
 from tkinter import ttk
+import tkinter.scrolledtext as scrolledtext
 from datetime import datetime
 from tkinter.filedialog import askopenfilename
 import google.auth
@@ -147,6 +148,11 @@ class SoftwareScreen(Tk):
         self.html_file_name = StringVar()
         self.token_json_file_name = StringVar()
         
+        self.subject_mail = StringVar()
+        self.spoof_name = StringVar()
+        
+        self.sending_mail = StringVar()
+        
         # =============================== Back Ground ==========================
         #Credits
         # self.credit = Label(self,text="IMS - Inventory Management Syestem | Developed By: Syed Muhammad",fg="white",bg="grey").place(x=0,y=685,relwidth=1)
@@ -155,11 +161,11 @@ class SoftwareScreen(Tk):
         self.l1 = Label(self,text="Bulk Mailer",font=("Times New Roman","30","bold",),bg="light blue", fg="yellow").place(x=0,y=0,relwidth=1)  
         
         # ===========================================================================================
-        self.mails_info = LabelFrame(self, text="Recipients Info",font=("Times New Roman","20"), width="450", height="300", borderwidth="2", bg="white", labelanchor='n')
+        self.uploads_info = LabelFrame(self, text="Uploads Info",font=("Times New Roman","20"), width="450", height="300", borderwidth="2", bg="white", labelanchor='n')
         
             # -----------------------------------------------------------
         
-        self.recipients_upload_frame = Frame(self.mails_info, bg="white")
+        self.recipients_upload_frame = Frame(self.uploads_info, bg="white")
         
         self.recipients_upload_label = Label(self.recipients_upload_frame, text="Upload Recipients File", font=("Times New Roman", "15"), bg="white")
         self.recipients_upload_label.grid(row=0, column=0, columnspan=1)
@@ -174,9 +180,7 @@ class SoftwareScreen(Tk):
         
             # ---------------------------------------------------------------
             
-        self.html_upload_frame = Frame(self.mails_info, bg="white")
-        
-        
+        self.html_upload_frame = Frame(self.uploads_info, bg="white")        
         
         self.html_upload_label = Label(self.html_upload_frame, text="Upload HTML File", font=("Times New Roman", "15"), bg="white")
         self.html_upload_label.grid(row=0, column=0, columnspan=1)
@@ -184,14 +188,14 @@ class SoftwareScreen(Tk):
         self.html_upload_entry = Entry(self.html_upload_frame, textvariable=self.html_file_name, font=("Times New Roman", "15"), width="30", bg="white")
         self.html_upload_entry.grid(row=1, column=0, columnspan=1, padx=15, pady=10)
         
-        self.html_upload_button = Button(self.html_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg="white")
+        self.html_upload_button = Button(self.html_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg="light blue")
         self.html_upload_button.grid(row=1, column=1)
         
         self.html_upload_frame.place(x=5, y=80)    
         
             # ---------------------------------------------------------------
             
-        self.token_json_upload_frame = Frame(self.mails_info, bg="white")
+        self.token_json_upload_frame = Frame(self.uploads_info, bg="white")
         
         self.token_json_upload_label = Label(self.token_json_upload_frame, text="Upload Token(JSON) File", font=("Times New Roman", "15"), bg="white")
         self.token_json_upload_label.grid(row=0, column=0, columnspan=1)
@@ -199,17 +203,131 @@ class SoftwareScreen(Tk):
         self.token_json_upload_entry = Entry(self.token_json_upload_frame, textvariable=self.token_json_file_name, font=("Times New Roman", "15"), width="30", bg="white")
         self.token_json_upload_entry.grid(row=1, column=0, columnspan=1, padx=15, pady=10)
         
-        self.token_json_upload_button = Button(self.token_json_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg="white")
+        self.token_json_upload_button = Button(self.token_json_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg="light blue")
         self.token_json_upload_button.grid(row=1, column=1)
         
         self.token_json_upload_frame.place(x=5, y=160)    
             
+            # ---------------------------------------------------------------------------------------------------------------
             
-            
-        self.mails_info.place(x=20, y=80)  
+        self.uploads_info.place(x=30, y=80)  
         
-        # =============================================================================================
+        # =============================================================================================================================
+        
+        self.desc_info = LabelFrame(self, text="Descriptions Info",font=("Times New Roman","20"), width="450", height="300", borderwidth="2", bg="white", labelanchor='n')
+        
+            # ----------------------------------------------------------------------------------------------------------------
             
+        self.subject_info_frame = Frame(self.desc_info, bg="white")
+        
+        self.subject_info_label = Label(self.subject_info_frame, text="Subject:", font=("Times New Roman", "15"), bg="white")
+        self.subject_info_label.grid(row=0, column=0, padx=8)
+        
+        self.subject_info_entry = Entry(self.subject_info_frame, textvariable = self.subject_mail, font=("Times New Roman", "15"), borderwidth=1, background="light yellow", width="33" )
+        self.subject_info_entry.grid(row=0, column=1, padx=8)
+        
+        self.subject_info_frame.place(x=5, y=5)
+        
+            # ---------------------------------------------------------------------------------------------------------------
+            
+        self.spoof_name_frame = Frame(self.desc_info, bg="white")
+        
+        self.spoof_name_label = Label(self.spoof_name_frame, text="Name(Spoof):", font=("Times New Roman", "15"), bg="white")
+        self.spoof_name_label.grid(row=0, column=0, padx=8)
+        
+        self.spoof_name_entry = Entry(self.spoof_name_frame, textvariable = self.spoof_name, font=("Times New Roman", "15"), borderwidth=1, background="light yellow", width="29" )
+        self.spoof_name_entry.grid(row=0, column=1)
+        
+        self.spoof_name_frame.place(x=5, y=50)
+            
+            # ----------------------------------------------------------------------------------------------------------------
+        
+        self.description_mail_frame = Frame(self.desc_info, bg="white")
+        
+        self.description_mail_label = Label(self.description_mail_frame, text="Mail Description", font=("Times New Roman", "15"), bg="white", justify="center")
+        self.description_mail_label.grid(row=0, column=0, padx=8)
+        
+        self.description_mail_text = scrolledtext.ScrolledText(self.description_mail_frame, font=("Times New Roman", "15"), borderwidth=1, background="light yellow", width="41", height="5", wrap='word', undo=True)
+        self.description_mail_text.grid(row=1, column=0, padx=5, pady=10)
+        
+        self.description_mail_frame.place(x=5, y=100)
+            
+            # ----------------------------------------------------------------------------------------------------------------
+        
+        self.desc_info.place(x=520, y=80)  
+        
+        # ======================================== Email Structure and Send Button ===========================================
+        
+        self.submit_mail_frame = Frame(self, borderwidth="2", width=940, bg="white")
+        
+            # -------------------------------------------------------------------------------------------------------
+        
+        self.write_mail_label = Label(self.submit_mail_frame, text="Enter Your Email:", font=("Times New Roman", 15), bg="white") 
+        self.write_mail_label.grid(row=0, column=0)
+
+        self.write_mail_entry = Entry(self.submit_mail_frame, textvariable = self.sending_mail, font=("Times New Roman", 16), bg="light yellow", width=30) 
+        self.write_mail_entry.grid(row=0, column=1, padx=10)
+
+        self.send_mail_button = Button(self.submit_mail_frame, text="Submit Mail", font=("Times New Roman", 15), bg="light green") 
+        self.send_mail_button.grid(row=0, column=2, padx=60)        
+        
+        self.submit_mail_frame.place(x=30, y=400)
+        
+        # ======================================== Treeview ======================================================================
+        
+        self.treeview_frame = Frame(self)
+        
+        # ----------------------------------    ------------------------------
+        
+        self.style = ttk.Style()
+        self.style.configure("Treeview", background="#D3D3D3", foreground="black", fieldbackground="white", rowheight=25)
+        self.style.theme_use("default")
+        self.style.configure("Treeview.Heading", font=("Times", 15))
+        self.style.configure(".", font="Times 12")
+        # ---------------------------------   ----------------------------
+            
+        self.yscrollbar = Scrollbar(self.treeview_frame)
+        self.yscrollbar.pack(side=RIGHT,fill=Y)
+        
+        # -----------------------------------    ------------------------------------------
+        
+        #
+        col = ("S.No", "Mail ID", "Sent To")
+        
+        #
+        self.treeview = ttk.Treeview(self.treeview_frame, height=8, show="headings", columns=col, yscrollcommand=self.yscrollbar.set)
+        
+        #
+        
+        # for i in range(len(col)):
+        #     self.treeview.column(col[i], width=len(col[i])+2, anchor=W)
+        
+        self.treeview.column(col[0], width=100, anchor=W)
+        self.treeview.column(col[1], width=300, anchor=W)
+        self.treeview.column(col[2], width=500, anchor=W)
+            
+        #
+        for i in range(len(col)):
+            self.treeview.heading(col[i], text=col[i], anchor=CENTER)
+
+        #
+        # if os.path.exists(f"Products/{self.seller_info[2]}.csv"):
+        #     self.products = Filing.file_read(dir_name="Products", file_name=self.seller_info[2])
+        #     if len(self.products) > 1:
+        #         for i in self.products[1:]:
+        #             self.treeview.insert(parent="", index="end", iid=self.count, text="", values=(self.count, i[1], i[2], i[3], i[4], i[5], i[6]))
+        #             self.count += 1
+        
+        #
+        self.treeview.pack(fill=BOTH)
+        #
+        self.yscrollbar.config(command=self.treeview.yview)
+
+        #
+        self.treeview_frame.place(x=25, y=460, width=950)
+
+        
+        # =============================================================================================================================
             
         self.mainloop()
         
