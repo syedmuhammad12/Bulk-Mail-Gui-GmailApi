@@ -2,8 +2,10 @@ from tkinter import *
 from tkinter.messagebox import showinfo,showerror,askyesno,askokcancel,showwarning
 from tkinter import ttk
 import tkinter.scrolledtext as scrolledtext
-from datetime import datetime
 from tkinter.filedialog import askopenfilename
+import pickle
+import os
+from datetime import datetime
 import google.auth
 # from googleapiclient.discovery import build
 # from googleapiclient.errors import HttpError
@@ -12,6 +14,10 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 # from googleapiclient.discovery import build
 # from googleapiclient.errors import HttpError
+import psycopg
+from proxy_list import ProxyList
+import pandas
+
 
 class Main(Tk):
     
@@ -108,17 +114,38 @@ class Main(Tk):
     def login_check(self):
         userid = self.user_id.get()
         userpass = self.user_pass.get()
-        if userid == "user" and userpass == "user":
+           
+        conn = psycopg.connect("postgres://fcmyqzlp:lGTV9BNw__XkNHIu_W0xNe7ahiOjDq4z@rain.db.elephantsql.com/fcmyqzlp")
+        cur = conn.cursor()
+        conn.autocommit = True
+        a = cur.execute(f"SELECT * FROM Users WHERE user_id='{userid}' and password='{userpass}' and is_available=TRUE")
+        if len(a.fetchall())>0:
+            # cur.execute(f""" UPDATE Users SET is_available=FALSE WHERE user_id='{userid}' """)
+            file = open("cred.txt", "w+")
+            file.write(f"user_id={userid}\tpassword={userpass}")
+            with open(f'{os.path.expanduser("~")}/cred.pkl', "wb") as pkl:
+                pickle.dump(file.read(), pkl)
+            file.close()
+            os.remove("cred.txt")
             self.destroy()
+            SoftwareScreen()
         else:
-            showerror("Error","Write correct credentials")
+           showerror("Error","Write correct credentials")
+        #     self.destroy()
+        #     SoftwareScreen()
+        # else:
+        #     showerror("Error","Write correct credentials")
 
 class SoftwareScreen(Tk):
     
-    def __init__(self):
+    def __init__(self, bg_color="#121212", fg_color="white"):
         # ================================ Main Screen ========================================
         
         super().__init__()
+        self.bg_color = bg_color
+        self.fg_color = fg_color
+        self.entry_bg = "light yellow"
+        self.button_bg = "light blue"
         # self.overrideredirect(True)
         # self.iconbitmap('')
         #===========================================================================================
@@ -140,7 +167,7 @@ class SoftwareScreen(Tk):
         
         # super().state("zoomed")
         # super().title("Retail Management System")
-        self.config(bg="white")
+        self.config(bg=self.bg_color)
         
         # ================================= Variables ========================================================
         
@@ -158,52 +185,52 @@ class SoftwareScreen(Tk):
         # self.credit = Label(self,text="IMS - Inventory Management Syestem | Developed By: Syed Muhammad",fg="white",bg="grey").place(x=0,y=685,relwidth=1)
             
         #=======================================================================
-        self.l1 = Label(self,text="Bulk Mailer",font=("Times New Roman","30","bold",),bg="light blue", fg="yellow").place(x=0,y=0,relwidth=1)  
+        self.l1 = Label(self,text="Blaze Mailer",font=("Times New Roman","30","bold",),bg="dark blue", fg="yellow").place(x=0,y=0,relwidth=1)  
         
         # ===========================================================================================
-        self.uploads_info = LabelFrame(self, text="Uploads Info",font=("Times New Roman","20"), width="450", height="300", borderwidth="2", bg="white", labelanchor='n')
+        self.uploads_info = LabelFrame(self, text="Uploads Info",font=("Times New Roman","20"), width="450", height="300", borderwidth="2", bg=self.bg_color, labelanchor='n', foreground=self.fg_color)
         
             # -----------------------------------------------------------
         
-        self.recipients_upload_frame = Frame(self.uploads_info, bg="white")
+        self.recipients_upload_frame = Frame(self.uploads_info, bg=self.bg_color)
         
-        self.recipients_upload_label = Label(self.recipients_upload_frame, text="Upload Recipients File", font=("Times New Roman", "15"), bg="white")
+        self.recipients_upload_label = Label(self.recipients_upload_frame, text="Upload Recipients File", font=("Times New Roman", "15"), bg=self.bg_color, foreground=self.fg_color)
         self.recipients_upload_label.grid(row=0, column=0, columnspan=1)
         
-        self.recipients_upload_entry = Entry(self.recipients_upload_frame, textvariable=self.recipients_file_name, font=("Times New Roman", "15"), width="30", bg="white")
+        self.recipients_upload_entry = Entry(self.recipients_upload_frame, textvariable=self.recipients_file_name, font=("Times New Roman", "15"), width="30", bg=self.entry_bg, state='disabled', disabledbackground=self.entry_bg, disabledforeground="black")
         self.recipients_upload_entry.grid(row=1, column=0, columnspan=1, padx=15, pady=10)
         
-        self.recipients_upload_button = Button(self.recipients_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg="light blue")
+        self.recipients_upload_button = Button(self.recipients_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg=self.button_bg, activebackground=self.button_bg, command=self.recipient_upload_button_click)
         self.recipients_upload_button.grid(row=1, column=1)
         
         self.recipients_upload_frame.place(x=5, y=5) 
         
             # ---------------------------------------------------------------
             
-        self.html_upload_frame = Frame(self.uploads_info, bg="white")        
+        self.html_upload_frame = Frame(self.uploads_info, bg=self.bg_color)        
         
-        self.html_upload_label = Label(self.html_upload_frame, text="Upload HTML File", font=("Times New Roman", "15"), bg="white")
+        self.html_upload_label = Label(self.html_upload_frame, text="Upload HTML File", font=("Times New Roman", "15"), bg=self.bg_color, foreground=self.fg_color)
         self.html_upload_label.grid(row=0, column=0, columnspan=1)
         
-        self.html_upload_entry = Entry(self.html_upload_frame, textvariable=self.html_file_name, font=("Times New Roman", "15"), width="30", bg="white")
+        self.html_upload_entry = Entry(self.html_upload_frame, textvariable=self.html_file_name, font=("Times New Roman", "15"), width="30", bg=self.entry_bg, state='disabled', disabledbackground=self.entry_bg, disabledforeground="black")
         self.html_upload_entry.grid(row=1, column=0, columnspan=1, padx=15, pady=10)
         
-        self.html_upload_button = Button(self.html_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg="light blue")
+        self.html_upload_button = Button(self.html_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg=self.button_bg, activebackground=self.button_bg, command=self.html_upload_button_click)
         self.html_upload_button.grid(row=1, column=1)
         
         self.html_upload_frame.place(x=5, y=80)    
         
             # ---------------------------------------------------------------
             
-        self.token_json_upload_frame = Frame(self.uploads_info, bg="white")
+        self.token_json_upload_frame = Frame(self.uploads_info, bg=self.bg_color)
         
-        self.token_json_upload_label = Label(self.token_json_upload_frame, text="Upload Token(JSON) File", font=("Times New Roman", "15"), bg="white")
+        self.token_json_upload_label = Label(self.token_json_upload_frame, text="Upload Token(JSON) File", font=("Times New Roman", "15"), bg=self.bg_color, foreground=self.fg_color)
         self.token_json_upload_label.grid(row=0, column=0, columnspan=1)
         
-        self.token_json_upload_entry = Entry(self.token_json_upload_frame, textvariable=self.token_json_file_name, font=("Times New Roman", "15"), width="30", bg="white")
+        self.token_json_upload_entry = Entry(self.token_json_upload_frame, textvariable=self.token_json_file_name, font=("Times New Roman", "15"), width="30", bg=self.entry_bg, state='disabled', disabledbackground=self.entry_bg, disabledforeground="black")
         self.token_json_upload_entry.grid(row=1, column=0, columnspan=1, padx=15, pady=10)
         
-        self.token_json_upload_button = Button(self.token_json_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg="light blue")
+        self.token_json_upload_button = Button(self.token_json_upload_frame, text="Upload", font=("Times New Roman", "12"), width="10", bg=self.button_bg, activebackground=self.button_bg, command=self.token_upload_button_click)
         self.token_json_upload_button.grid(row=1, column=1)
         
         self.token_json_upload_frame.place(x=5, y=160)    
@@ -214,40 +241,40 @@ class SoftwareScreen(Tk):
         
         # =============================================================================================================================
         
-        self.desc_info = LabelFrame(self, text="Descriptions Info",font=("Times New Roman","20"), width="450", height="300", borderwidth="2", bg="white", labelanchor='n')
+        self.desc_info = LabelFrame(self, text="Descriptions Info",font=("Times New Roman","20"), width="450", height="300", borderwidth="2", bg=self.bg_color, fg=self.fg_color, labelanchor='n')
         
             # ----------------------------------------------------------------------------------------------------------------
             
-        self.subject_info_frame = Frame(self.desc_info, bg="white")
+        self.subject_info_frame = Frame(self.desc_info, bg=self.bg_color)
         
-        self.subject_info_label = Label(self.subject_info_frame, text="Subject:", font=("Times New Roman", "15"), bg="white")
+        self.subject_info_label = Label(self.subject_info_frame, text="Subject:", font=("Times New Roman", "15"), bg=self.bg_color, fg=self.fg_color)
         self.subject_info_label.grid(row=0, column=0, padx=8)
         
-        self.subject_info_entry = Entry(self.subject_info_frame, textvariable = self.subject_mail, font=("Times New Roman", "15"), borderwidth=1, background="light yellow", width="33" )
+        self.subject_info_entry = Entry(self.subject_info_frame, textvariable = self.subject_mail, font=("Times New Roman", "15"), borderwidth=1, background=self.entry_bg, width="33" )
         self.subject_info_entry.grid(row=0, column=1, padx=8)
         
         self.subject_info_frame.place(x=5, y=5)
         
             # ---------------------------------------------------------------------------------------------------------------
             
-        self.spoof_name_frame = Frame(self.desc_info, bg="white")
+        self.spoof_name_frame = Frame(self.desc_info, bg=self.bg_color)
         
-        self.spoof_name_label = Label(self.spoof_name_frame, text="Name(Spoof):", font=("Times New Roman", "15"), bg="white")
+        self.spoof_name_label = Label(self.spoof_name_frame, text="Name(Spoof):", font=("Times New Roman", "15"), bg=self.bg_color, fg=self.fg_color)
         self.spoof_name_label.grid(row=0, column=0, padx=8)
         
-        self.spoof_name_entry = Entry(self.spoof_name_frame, textvariable = self.spoof_name, font=("Times New Roman", "15"), borderwidth=1, background="light yellow", width="29" )
+        self.spoof_name_entry = Entry(self.spoof_name_frame, textvariable = self.spoof_name, font=("Times New Roman", "15"), borderwidth=1, background=self.entry_bg, width="29" )
         self.spoof_name_entry.grid(row=0, column=1)
         
         self.spoof_name_frame.place(x=5, y=50)
             
             # ----------------------------------------------------------------------------------------------------------------
         
-        self.description_mail_frame = Frame(self.desc_info, bg="white")
+        self.description_mail_frame = Frame(self.desc_info, bg=self.bg_color)
         
-        self.description_mail_label = Label(self.description_mail_frame, text="Mail Description", font=("Times New Roman", "15"), bg="white", justify="center")
+        self.description_mail_label = Label(self.description_mail_frame, text="Mail Description", font=("Times New Roman", "15"), bg=self.bg_color, fg=self.fg_color, justify="center")
         self.description_mail_label.grid(row=0, column=0, padx=8)
         
-        self.description_mail_text = scrolledtext.ScrolledText(self.description_mail_frame, font=("Times New Roman", "15"), borderwidth=1, background="light yellow", width="41", height="5", wrap='word', undo=True)
+        self.description_mail_text = scrolledtext.ScrolledText(self.description_mail_frame, font=("Times New Roman", "15"), borderwidth=1, background=self.entry_bg, width="41", height="5", wrap='word', undo=True)
         self.description_mail_text.grid(row=1, column=0, padx=5, pady=10)
         
         self.description_mail_frame.place(x=5, y=100)
@@ -258,17 +285,17 @@ class SoftwareScreen(Tk):
         
         # ======================================== Email Structure and Send Button ===========================================
         
-        self.submit_mail_frame = Frame(self, borderwidth="2", width=940, bg="white")
+        self.submit_mail_frame = Frame(self, borderwidth="2", width=940, bg=self.bg_color)
         
             # -------------------------------------------------------------------------------------------------------
         
-        self.write_mail_label = Label(self.submit_mail_frame, text="Enter Your Email:", font=("Times New Roman", 15), bg="white") 
+        self.write_mail_label = Label(self.submit_mail_frame, text="Enter Your Email:", font=("Times New Roman", 15), bg=self.bg_color, fg=self.fg_color) 
         self.write_mail_label.grid(row=0, column=0)
 
-        self.write_mail_entry = Entry(self.submit_mail_frame, textvariable = self.sending_mail, font=("Times New Roman", 16), bg="light yellow", width=30) 
+        self.write_mail_entry = Entry(self.submit_mail_frame, textvariable = self.sending_mail, font=("Times New Roman", 16), bg=self.entry_bg, width=30) 
         self.write_mail_entry.grid(row=0, column=1, padx=10)
 
-        self.send_mail_button = Button(self.submit_mail_frame, text="Submit Mail", font=("Times New Roman", 15), bg="light green") 
+        self.send_mail_button = Button(self.submit_mail_frame, text="Submit Mail", font=("Times New Roman", 15), bg=self.button_bg, activebackground=self.button_bg) 
         self.send_mail_button.grid(row=0, column=2, padx=60)        
         
         self.submit_mail_frame.place(x=30, y=400)
@@ -332,8 +359,64 @@ class SoftwareScreen(Tk):
         self.mainloop()
         
         
+    def recipient_upload_button_click(self):
+        recipient_file_path = askopenfilename(parent=self, title='Choose Recipient File', initialdir='./',
+                                        filetypes=(("TEXT File (*.txt)", "*.txt"), ("CSV File (*.csv)", "*.csv"), ("Excel File (*.xlsx)", "*.xlsx")))
+        if recipient_file_path != "":
+            self.recipients_file_name.set(recipient_file_path)
+            
+    def html_upload_button_click(self):
+        html_file_path = askopenfilename(parent=self, title='Choose HTML File', initialdir='./',
+                                        filetypes=[("HTML File (*.html)", "*.html")])
+        if html_file_path != "":
+            self.html_file_name.set(html_file_path)
+            
+    def token_upload_button_click(self):
+        token_file_path = askopenfilename(parent=self, title='Choose Credential File', initialdir='./',
+                                        filetypes=[("JSON File (*.json)", "*.json")])
+        if token_file_path != "":
+            self.token_json_file_name.set(token_file_path)
+            
+    def submit_mail_button(self):
+        
+        recipient_file = self.recipients_file_name.get()
+        html_file = self.html_file_name.get()
+        token_file = self.token_json_file_name.get()
+        subject_mail = self.subject_mail.get()
+        spoof_name = self.spoof_name.get()
+        sending_email = self.sending_mail.get()
+        
+        if recipient_file == "":
+            showerror("Error", "Please Select Recipients file")
+        elif html_file == "":
+            showerror("Error", "Please Select HTML file")
+        elif token_file == "":
+            showerror("Error", "Please Select Crediential file")
+        elif sending_email == "":
+            showerror("Error", "Please Enter Sender's Email Address")
+        
+        else:
+            proxy_list = ProxyList()
+            ips = proxy_list.get_all_proxies()
+            ips_1 = list(filter(lambda x: x[2]=='yes' and x[3]=='no', ips))
+            ips_2 = list(filter(lambda x: x[2]=='yes', ips))
+            if len(ips_1)>0:
+                ips = list(map(lambda x: f"http://{x[0]}:{x[1]}", proxy_list.get_all_proxies()))
+            elif len(ips_2)>0:
+                ips = list(map(lambda x: f"https://{x[0]}:{x[1]}", proxy_list.get_all_proxies()))
+            mail_list = []
+            if recipient_file.endswith(".txt"):
+                with open(recipient_file, "r") as f:
+                    mail_list = f.readlines()
+            else: 
+                if 
+
 if __name__ == "__main__":
-    SoftwareScreen()
+    if os.path.exists(f'{os.path.expanduser("~")}/cred.pkl'):
+        SoftwareScreen()
+    else:
+        Main()
+    # SoftwareScreen()
     # SCOPES = ['https://www.googleapis.com/auth/gmail.send']
     # creds = Credentials.from_authorized_user_file('token.json', SCOPES)
     # service = build('gmail', 'v1', credentials=creds)
