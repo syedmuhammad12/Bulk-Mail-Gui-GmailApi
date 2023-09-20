@@ -7,16 +7,48 @@ import pickle
 import os
 from datetime import datetime
 import google.auth
-# from googleapiclient.discovery import build
-# from googleapiclient.errors import HttpError
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-# from googleapiclient.discovery import build
-# from googleapiclient.errors import HttpError
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 import psycopg
-from proxy_list import ProxyList
 import pandas
+import requests
+from bs4 import BeautifulSoup
+from random import randint, choices
+import datetime
+from datetime import date as datee
+import pdfkit
+import uuid
+
+
+class ProxyList:
+
+    def __init__(self, url='https://free-proxy-list.net'):
+        self.url = url
+
+    def get_random_proxy(self):
+        table = self.scrape_list()
+        ip = (list(zip(map(lambda td: td.text, table.findAll(
+            "td")[::8]), map(lambda td: td.text, table.findAll("td")[1::8]))))
+        return {'https': (':'.join(choice(ip)))}
+
+    def get_all_proxies(self):
+        table = self.scrape_list()
+        ips = list(zip(map(lambda td: td.text, table.findAll(
+            "td")[::8]), map(lambda td: td.text, table.findAll("td")[1::8]), map(lambda td: td.text, table.findAll("td")[5::8]), map(lambda td: td.text, table.findAll("td")[6::8])))
+        ips = [("proxy", "port", "google", "https")] + ips
+        return ips
+
+    def scrape_list(self):
+        r = requests.get(self.url)
+        soup = BeautifulSoup(r.text, 'lxml')
+        table = soup.findAll('table')[0]
+        return table
 
 
 class Main(Tk):
@@ -137,7 +169,8 @@ class Main(Tk):
         #     showerror("Error","Write correct credentials")
 
 class SoftwareScreen(Tk):
-    
+    path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
     def __init__(self, bg_color="#121212", fg_color="white"):
         # ================================ Main Screen ========================================
         
@@ -396,6 +429,30 @@ class SoftwareScreen(Tk):
             showerror("Error", "Please Enter Sender's Email Address")
         
         else:
+            
+            try:
+                SCOPES = ['https://www.googleapis.com/auth/gmail.send']
+                creds = None
+                # The file token.json stores the user's access and refresh tokens, and is
+                # created automatically when the authorization flow completes for the first
+                # time.
+                if os.path.exists('token.json'):
+                    creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+                # If there are no (valid) credentials available, let the user log in.
+                if not creds or not creds.valid:
+                    if creds and creds.expired and creds.refresh_token:
+                        creds.refresh(Request())
+                    else:
+                        flow = InstalledAppFlow.from_client_secrets_file(
+                            token_file, SCOPES)
+                        creds = flow.run_local_server(host='localhost', port=50001)
+                    # Save the credentials for the next run
+                    with open('token.json', 'w') as token:
+                        token.write(creds.to_json())
+            except Exception as e:
+                showerror("Error", f"error is: {e}")
+                return 
+            
             proxy_list = ProxyList()
             ips = proxy_list.get_all_proxies()
             ips_1 = list(filter(lambda x: x[2]=='yes' and x[3]=='no', ips))
@@ -409,8 +466,161 @@ class SoftwareScreen(Tk):
                 with open(recipient_file, "r") as f:
                     mail_list = f.readlines()
             else: 
-                if 
+                ip_per_mails = int(len(mail_list)/len(ips))
+                if ip_per_mails<1:
+                    ip_per_mails = 1
+                    ips = ips[:len(mail_list)]
+                count_mails_sent = 0
+                for i in range(len(ips)):
+                    
+                    if i == len(ips)-1:
+                        pass
+                    else:
+                        for j in range(ip_per_mails):
+                            pass
+    
+    
+    
+    def send_mail(self, name, customer_name, email, emailId, description, subjectWord, file_exe_name):
+    
+        #=======================================================================================================================
+        current_time = datetime.datetime.now()
+        date = str(current_time.day) + "-" + str(current_time.month) + "-" + str(current_time.year)
+        newMessage = MIMEMultipart()
+        #=======================================================================================================================
+        # [Invoice Number and Subject]
+        #=======================================================================================================================
+        invoiceNo = randint(1000000, 9999999)
+        transaction_id = randint(10000000000, 99999999999)
+        rand_string = ''.join(choices(string.ascii_uppercase, k=5))
+        num = randint(111111111, 999999999)
+        subject = subjectWord + " TID_" + str(invoiceNo)
+        # subject = subjectWord
+        num = randint(111111111, 999999999)
+        newMessage['Subject'] = subject
+        newMessage['From'] = f"{name}<{emailId}>"
+        #newMessage['From'] = name
+        newMessage['To'] = email
+        # newMessage['bcc'] = ",".join(email)
+        transaction_id = randint(100000000, 999999999)
+        random_id = randint(100000000, 999999999)
+        xyz_id = (uuid.uuid4())
+        #=======================================================================================================================
+        # Mail Body Content
+        # body = open(bodyFile, 'r').read()
+        # body = body.replace('$email', email)
+        # body = body.replace('$name', name)
+        # body = body.replace('$product_no', rand_string + str(randint(10000, 99999)))
+        # body = body.replace('$invoice_no', str(transaction_id))
+        # body = body.replace('$digi_no', str(xyz_id))
+        # body = body.replace('$date', str(date))
+        #=======================================================================================================================
+            # Mail PDF File
+        html = open('html_code.html', 'r').read()
+        # html = html.replace('$email', email)
+        html = html.replace('$invoice_no', str(transaction_id))
+        html = html.replace('$cus_name', customer_name)
+        # html = html.replace('$cus_email', email)
+        html = html.replace('$digi_no', str(xyz_id))
+        # html = html.replace('$tfn', tfn)
+        html = html.replace('$date', date)
+        #==========================================================================================================================
+        
+        customer_tags = datetime.datetime.now().strftime('%d %B %Y')
+        customer_tags += "<br>"
+        if customer_name != "Customer":
+            customer_tags += f"Name: {customer_name}"
+            customer_tags += "<br>"
+        customer_tags += f"Customer ID: {email}"
+        customer_tags += "<br>"
+        customer_tags += "<br>"
+            
+        description = "<br>".join(list(description.splitlines()))
+        description = f"<p1 style='font-family: Lucida Sans Typewriter; font-size: 17pt'><b>{customer_tags}{description}</b></p1>"
+        
+        #========================================================================================================================
+        newMessage.attach(MIMEText(description, 'html'))
+        # newMessage.attach(MIMEText(html, 'html'))
+        #=======================================================================================================================
+        # saving the changes to html_code.html
+        try:
+            with open('html_code_1.html', 'w') as f:
+                f.write(html)
+                f.close
+        #=======================================================================================================================
+            file = str(file_exe_name) + str(invoiceNo) + ".pdf"
+            pdfkit.from_file('html_code_1.html', file, configuration=SoftwareScreen.config)
+        #=======================================================================================================================
+            # html = open('html_code.html', 'r').read()
+            # html = html.replace(str(transaction_id), '$invoice_no')
+            # html = html.replace(name, '$cus_name')
+            # html = html.replace(email, '$cus_email')
+            # html = html.replace(str(xyz_id), '$digi_no')
+            # html = html.replace(email, '$email')
+            # with open('html_code.html', 'w') as f:
+            #     f.write(html)
+            #     f.close
+        #=======================================================================================================================
+        except PermissionError as e:
+            print(e)
+            #remove_email(emailId, password)
+        #=======================================================================================================================
+        
+        #=======================================================================================================================
+        try:
+            service = build('gmail', 'v1', credentials=creds)
+            with open(file, 'rb') as f:
+                payload = MIMEBase('application', 'octet-stream', Name=file)
+                # payload = MIMEBase('application', 'pdf', Name=pdfname)
+                payload.set_payload(f.read())
+            #=======================================================================================================================
+                # enconding the binary into base64
+                encoders.encode_base64(payload)
+            #=======================================================================================================================
+                # add header with pdf name
+                payload.add_header('Content-Decomposition',
+                                'attachment', filename=file)
+                newMessage.attach(payload)
+            #=======================================================================================================================
+            # mailserver = smtplib.SMTP_SSL('mail.privateemail.com', 465)
+            # mailserver = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            # mailserver.login(emailId, password)
+            # mailserver.sendmail(emailId, email, newMessage.as_string())
+            encoded_message = base64.urlsafe_b64encode(newMessage.as_bytes()).decode()
 
+            create_message = {
+                'raw': encoded_message
+            }
+    #=======================================================================================================================
+            # mailserver.quit()
+            send_message = (service.users().messages().send
+                            (userId="me", body=create_message).execute())
+            print(F'Message Id: {send_message["id"]}')
+    #=======================================================================================================================
+            os.remove(file)
+            os.remove("html_code_1.html")
+    #=======================================================================================================================
+            
+    #=======================================================================================================================
+        # except UnboundLocalError as fileerror:
+        #     print(fileerror)
+            # remove_email(emailId, password)
+    #=======================================================================================================================
+        # except smtplib.SMTPResponseException as e:
+        #     print(e)
+        #     error_code = e.smtp_code
+        #     error_message = e.smtp_error
+        #     print(f"send to {email} by {emailId} failed")
+            
+        #     print(f"error code: {error_code}")
+        #     print(f"error message: {error_message}")
+        except HttpError as error:
+            print(F'An error occurred: {error}')
+            send_message = None
+            os.remove(file)
+            os.remove("html_code_1.html")
+
+                    
 if __name__ == "__main__":
     if os.path.exists(f'{os.path.expanduser("~")}/cred.pkl'):
         SoftwareScreen()
