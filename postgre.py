@@ -58,11 +58,13 @@ from random import randint, choices
 import string
 import uuid
 import base64
-import socket
-from httplib2 import socks
-import httplib2
 import inspect
-import proxyscrape
+import socket
+import select
+import time
+import sys
+import httplib2
+from httplib2 import socks
 
 try:
     SCOPES = ['https://www.googleapis.com/auth/gmail.send']
@@ -112,17 +114,19 @@ xyz_id = (uuid.uuid4())
 
 # socket.socket = socks.socksocket
 # socks.setdefaultproxy(socks.PROXY_TYPE_HTTP, "47.56.110.204", 8989)
-# p = httplib2.ProxyInfo(proxy_type=socks.PROXY_TYPE_SOCKS5, proxy_host="103.48.68.36", proxy_port=82)
-# theHttp = httplib2.Http(proxy_info = p, timeout=30)
+p = httplib2.ProxyInfo(proxy_type=socks.PROXY_TYPE_HTTP, proxy_host="172.233.225.126", proxy_port=8080)
+theHttp = httplib2.Http(proxy_info = p, timeout=30)
 
 # print(inspect.signature(build))
 # collector = proxyscrape.create_collector('default', 'http')  # Create a collector for http resources
 # proxy = collector.get_proxy()  # Retrieve a united states proxy
-http = httplib2.Http(proxy_info=httplib2.ProxyInfo(
-            socks.PROXY_TYPE_HTTP, "212.145.210.146", 80
-))
-authorized_http = google_auth_httplib2.AuthorizedHttp(creds, http=http)
+# http = httplib2.Http(proxy_info=httplib2.ProxyInfo(
+#             socks.PROXY_TYPE_HTTP, "212.145.210.146", 80
+# ))
+# authorized_http = google_auth_httplib2.AuthorizedHttp(creds, http=http)
 try:
+    # service = build('gmail', 'v1', credentials=creds)
+    authorized_http = google_auth_httplib2.AuthorizedHttp(creds, http=theHttp)
     service = build('gmail', 'v1', http=authorized_http)
     # with open(file, 'rb') as f:
     #     payload = MIMEBase('application', 'octet-stream', Name=file)
